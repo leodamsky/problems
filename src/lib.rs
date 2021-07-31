@@ -12,3 +12,4 @@ mod longest_increasing_path_in_a_matrix;
 mod my_calendar_i;
 mod my_calendar_ii;
 mod my_calendar_iii;
+mod min_stack;
