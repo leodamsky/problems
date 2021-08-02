@@ -14,3 +14,4 @@ mod my_calendar_ii;
 mod my_calendar_iii;
 mod min_stack;
 mod merge_k_sorted_lists;
+mod max_stack;
