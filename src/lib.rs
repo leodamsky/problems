@@ -18,3 +18,4 @@ mod min_stack;
 mod merge_k_sorted_lists;
 mod max_stack;
 mod sliding_window_maximum;
+mod unique_email_addresses;
