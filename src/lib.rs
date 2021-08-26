@@ -19,3 +19,4 @@ mod merge_k_sorted_lists;
 mod max_stack;
 mod sliding_window_maximum;
 mod unique_email_addresses;
+mod license_key_formatting;
