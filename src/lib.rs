@@ -22,3 +22,4 @@ mod unique_email_addresses;
 mod license_key_formatting;
 mod fruit_into_baskets;
 mod odd_even_jump;
+mod read_n_characters_given_read4;
