@@ -60,23 +60,14 @@ impl Solution {
         let n = height.len();
         let mut i = 0;
         let mut j = n - 1;
-        let mut left = height[i];
-        let mut right = height[j];
-        let mut area = left.min(right) * (j - i) as i32;
+        let mut area = height[i].min(height[j]) * (j - i) as i32;
 
         while i != j {
-            if left < right {
+            area = area.max(height[i].min(height[j]) * (j - i) as i32);
+            if height[i] < height[j] {
                 i += 1;
-                if height[i] * (j - i) as i32 > area {
-                    left = height[i];
-                    area = area.max(left.min(right) * (j - i) as i32);
-                }
             } else {
                 j -= 1;
-                if height[j] * (j - i) as i32 > area {
-                    right = height[j];
-                    area = area.max(left.min(right) * (j - i) as i32);
-                }
             }
         }
 
