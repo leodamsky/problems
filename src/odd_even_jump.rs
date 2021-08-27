@@ -96,84 +96,41 @@
 
 // @leetup=inject:before_code
 
-use std::collections::HashMap;
-
-use JumpResult::*;
-
-enum JumpResult {
-    ReachedEnd(bool),
-    ReachedCheckpoint { from: usize, odd: bool },
-}
-
-struct Jumper {
-    from: usize,
-    odd: bool,
-}
-
-impl Jumper {
-    fn new(from: usize) -> Jumper {
-        Jumper { from, odd: true }
-    }
-
-    fn jump(&mut self, candidates: &Vec<i32>, memo: &HashMap<(usize, bool), bool>) -> JumpResult {
-        if let Some(result) = memo.get(&(self.from, self.odd)) {
-            return ReachedEnd(*result);
-        }
-        if self.from == candidates.len() - 1 {
-            return ReachedEnd(true);
-        }
-
-        let mut to = None;
-        for to_idx in (self.from + 1)..candidates.len() {
-            let source = candidates[self.from];
-            let current_target = to.map(|idx| candidates[idx]);
-            let maybe_target = candidates[to_idx];
-            let better_target = if self.odd {
-                source <= maybe_target && current_target.map(|c| c > maybe_target).unwrap_or(true)
-            } else {
-                source >= maybe_target && current_target.map(|c| c < maybe_target).unwrap_or(true)
-            };
-            if better_target {
-                to = Some(to_idx);
-            }
-        }
-        if let Some(to) = to {
-            self.odd = !self.odd;
-            self.from = to;
-            ReachedCheckpoint {
-                from: self.from,
-                odd: self.odd,
-            }
-        } else {
-            ReachedEnd(false)
-        }
-    }
-}
+use std::collections::BTreeMap;
 
 impl Solution {
     pub fn odd_even_jumps(arr: Vec<i32>) -> i32 {
-        let mut good_count = 0;
+        // arr can't be empty, so there will be at least 1 good count
+        let mut good_count = 1;
 
-        let mut memo = HashMap::with_capacity(arr.len());
-        for i in 0..arr.len() {
-            let mut jumper = Jumper::new(i);
-            let mut processed_start_points = vec![(i, true)];
-            let success: bool = loop {
-                match jumper.jump(&arr, &memo) {
-                    ReachedEnd(success) => {
-                        break success;
-                    }
-                    ReachedCheckpoint { from, odd } => {
-                        processed_start_points.push((from, odd));
-                    }
-                }
-            };
-            for (c_idx, odd) in processed_start_points {
-                memo.insert((c_idx, odd), success);
+        // arrays below allow us to jump from A to B only once i.e. cache for jumps
+        // whether an odd jump from an index i can reached the end
+        let mut odd = vec![false; arr.len()];
+        // whether an even jump from an index i can reached the end
+        let mut even = vec![false; arr.len()];
+        *odd.last_mut().unwrap() = true;
+        *even.last_mut().unwrap() = true;
+        // map helps to efficiently decide where to jump next
+        let mut map = BTreeMap::new();
+        map.insert(*arr.last().unwrap(), arr.len() - 1);
+        // traversing jumps in a reversed order
+        // ensures the highest/lowest jump is valid
+        // excluding the last jump, which is good by definition
+        for i in (0..arr.len() - 1).rev() {
+            let from = arr[i];
+            // where to jump from an index i if it's an odd jump
+            if let Some((_, jump_to_idx)) = map.range(from..).next() {
+                odd[i] = even[*jump_to_idx];
             }
-            if success {
-                good_count += 1
+            // where to jump from an index i if it's an even jump
+            if let Some((_, jump_to_idx)) = map.range(..=from).next_back() {
+                even[i] = odd[*jump_to_idx];
             }
+            // at this point we should know whether we can reach the end from an index i
+            if odd[i] {
+                good_count += 1;
+            }
+            map.insert(from, i);
         }
 
         good_count
@@ -202,6 +159,18 @@ mod tests {
     #[test]
     fn t3() {
         assert_eq!(Solution::odd_even_jumps(vec![5, 1, 3, 4, 2]), 3);
+    }
+
+    #[test]
+    fn t4() {
+        // 1 -> 1 = false
+        // 2 -> 2 -> 1 -> 4 -> 4 -> 5 = true
+        // 3 -> 4 -> 4 -> 5 = true
+        // 1 -> 4 -> 4 -> 5 = true
+        // 4 -> 4 -> 5 = true
+        // 4 -> 5 = true
+        // 5 = true
+        assert_eq!(Solution::odd_even_jumps(vec![1, 2, 3, 2, 1, 4, 4, 5]), 6);
     }
 }
 
