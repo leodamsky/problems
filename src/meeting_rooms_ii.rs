@@ -1,31 +1,28 @@
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
+
 impl Solution {
     // time: O(n log(n))
     // space: O(1) because we deallocate input as we transform it
-    pub fn min_meeting_rooms(intervals: Vec<Vec<i32>>) -> i32 {
-        let mut intervals: Vec<_> = intervals
-            .into_iter()
-            .flat_map(|interval| vec![(interval[0], false), (interval[1], true)])
-            .collect();
-        intervals.sort_by(|i1, i2| {
-            // if intervals are adjacent, ensure the 1st one ends before the 2nd one starts
-            if i1.0 == i2.0 {
-                i1.1.cmp(&i2.1).reverse()
-            } else {
-                i1.cmp(i2)
-            }
-        });
-
-        let mut count = 0;
-        let mut max = 0;
-        for (_, end) in intervals {
-            if end {
-                count -= 1;
-            } else {
-                count += 1;
-                max = max.max(count);
-            }
+    pub fn min_meeting_rooms(mut intervals: Vec<Vec<i32>>) -> i32 {
+        if intervals.is_empty() {
+            return 0;
         }
-        max
+
+        intervals.sort_by_key(|i| i[0]);
+
+        let mut free_rooms = BinaryHeap::with_capacity(intervals.len());
+        free_rooms.push(Reverse(intervals[0][1]));
+
+        for i in intervals[1..].iter() {
+            // key part - here we free rooms lazily
+            if free_rooms.peek().unwrap().0 <= i[0] {
+                free_rooms.pop();
+            }
+            free_rooms.push(Reverse(i[1]));
+        }
+
+        return free_rooms.len() as i32;
     }
 }
 
@@ -45,5 +42,20 @@ mod tests {
     fn test2() {
         let res = Solution::min_meeting_rooms(vec![vec![13, 15], vec![1, 13]]);
         assert_eq!(res, 1);
+    }
+
+    #[test]
+    fn test3() {
+        let res = Solution::min_meeting_rooms(vec![
+            vec![0, 5],
+            vec![0, 5],
+            vec![0, 5],
+            vec![0, 5],
+            vec![6, 7],
+            vec![8, 9],
+            vec![9, 10],
+            vec![11, 12],
+        ]);
+        assert_eq!(res, 4);
     }
 }
