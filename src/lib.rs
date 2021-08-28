@@ -32,3 +32,4 @@ mod longest_substring_with_at_most_two_distinct_characters;
 mod missing_ranges;
 mod three_sum;
 mod two_sum_ii_input_array_is_sorted;
+mod next_permutation;
