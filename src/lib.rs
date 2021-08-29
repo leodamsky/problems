@@ -34,3 +34,4 @@ mod three_sum;
 mod two_sum_ii_input_array_is_sorted;
 mod next_permutation;
 mod multiply_strings;
+mod rotate_image;
