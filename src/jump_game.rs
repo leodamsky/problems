@@ -43,23 +43,15 @@
 
 impl Solution {
     pub fn can_jump(nums: Vec<i32>) -> bool {
-        let mut stack = vec![0];
         let n = nums.len();
-        let mut explored = vec![false; n];
-        explored[0] = true;
-        while let Some(i) = stack.pop() {
-            if i == n - 1 {
-                return true;
-            }
-            let max_jump = nums[i];
-            for next_jump in (i + 1)..n.min(i + 1 + max_jump as usize) {
-                if !explored[next_jump] {
-                    explored[next_jump] = true;
-                    stack.push(next_jump);
-                }
+        let mut last_pos = n - 1;
+        for (i, max_jump) in nums.into_iter().enumerate().rev() {
+            // can reach last good position
+            if i + max_jump as usize >= last_pos {
+                last_pos = i;
             }
         }
-        false
+        last_pos == 0
     }
 }
 // @leetup=code
