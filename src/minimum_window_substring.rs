@@ -56,56 +56,65 @@
 
 // @leetup=inject:before_code
 
-use std::collections::{HashMap, VecDeque};
-
 impl Solution {
     pub fn min_window(s: String, t: String) -> String {
-        if t.len() > s.len() {
-            return "".to_string();
+        fn char_idx(byte: u8) -> usize {
+            (byte - b'A') as usize
         }
 
-        let mut met = t.len();
-        let mut i = 0;
-
+        let mut state = [0; 128];
         // space: O(n) build char -> count mapping
-        let mut chars = HashMap::new();
-        // time: O(n)
-        for c in t.chars() {
-            *chars.entry(c).or_insert(0) += 1;
+        let mut target = [0; 128];
+        for b in t.bytes() {
+            target[char_idx(b)] += 1;
         }
-        // space: O(m) if t == n and consists of a the same character
-        let mut heads: HashMap<char, VecDeque<usize>> = HashMap::new();
+        let target = target;
 
-        let mut min = s.as_str();
-        // time: O(m + n?)
-        for j in 0..s.len() {
-            let c = s[j..].chars().next().unwrap();
-            if let Some(count) = chars.get_mut(&c) {
-                heads.entry(c).or_insert(VecDeque::new()).push_back(j);
-                if *count == 0 {
-                    heads.get_mut(&c).unwrap().pop_front();
+        let s_bytes = s.as_bytes();
+
+        let mut best_from = 0;
+        let mut best_to = 0;
+
+        let mut from = 0;
+        let mut to = 0;
+
+        // time: O(max(m, n))
+        let chars_expected = target.iter().filter(|&&ch| ch > 0).count();
+        let mut chars_found = 0;
+
+        while to < s_bytes.len() {
+            let ch = char_idx(s_bytes[to]);
+            if target[ch] > 0 {
+                if state[ch] + 1 == target[ch] {
+                    chars_found += 1;
                 }
-                if *count > 0 {
-                    *count -= 1;
-                    met -= 1;
+                state[ch] += 1;
+            }
+
+            if chars_found == chars_expected {
+                let mut head = char_idx(s_bytes[from]);
+                // move left pointer when head:
+                // 1. is not counted, not in our interest
+                // 2. has a higher count than needed
+                while target[head] == 0 || state[head] > target[head] {
+                    if state[head] > 0 {
+                        state[head] -= 1;
+                    }
+
+                    from += 1;
+                    head = char_idx(s_bytes[from]);
                 }
-                // guess it's O(n) in total as:
-                // higher diversity of characters makes this operations cheaper
-                // lower diversity of characters makes this operations rare
-                if *count == 0 {
-                    i = *heads.values().filter_map(|l| l.get(0)).min().unwrap_or(&j);
+
+                if to - from < best_to - best_from || best_to == 0 {
+                    best_from = from;
+                    best_to = to + 1;
                 }
             }
-            if met == 0 && min.len() > j - i + 1 {
-                min = &s[i..=j];
-            }
+
+            to += 1;
         }
 
-        if met == 0 {
-            min.to_string()
-        } else {
-            "".to_string()
-        }
+        s[best_from..best_to].to_string()
     }
 }
 // @leetup=code
